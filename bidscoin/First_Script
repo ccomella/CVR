@@ -1,0 +1,42 @@
+#Enter_to_Cluster_public
+ssh -X ips-0-3
+ qlogin
+cd public
+cd CVR
+module load python/venv 
+source activate bidscoin
+
+# Cajal01
+ssh -X cajal01
+module load python/python3.6
+source activate bidscoin
+
+#BIPLAS FOLDER
+#call bidsmapper dos digitos sirve
+bidsmapper -n "*_BIPLAS" -m "CRANEO_FUNCIONAL" /bcbl/data/MRI/BIPLAS_MRI/DATA/images /bcbl/home/public/CVR/BIPLAS_BIDS
+#Bidseditor change * to ?? so it could work 
+bidscoiner /bcbl/data/MRI/BIPLAS_MRI/DATA/images /bcbl/home/public/CVR/BIPLAS_BIDS #Tres Digitos 
+bidscoiner -b bidsmap2.yaml /bcbl/data/MRI/BIPLAS_MRI/DATA/images /bcbl/home/public/CVR/BIPLAS_BIDS #Dos Digitos
+
+
+#Call Bidsmapper in langconn sirve
+bidsmapper -n "*_LANGCONN" -m "CRANEO_FUNCIONAL" /bcbl/data/MRI/LANGCONN/DATA/images /bcbl/home/public/CVR/LANGCONN_BIDS
+bidscoiner /bcbl/data/MRI/LANGCONN/DATA/images /bcbl/home/public/CVR/LANGCONN_BIDS #Tres Digitos 
+bidscoiner -b bidsmap2.yaml /bcbl/data/MRI/LANGCONN/DATA/images /bcbl/home/public/CVR/LANGCONN_BIDS #Dos Digitos
+
+
+#Call Bidsmapper Presurgical Pre
+bidsmapper -n "*_Presurgical" -m "CRANEO_FUNCIONAL" /bcbl/data/MRI/PRESURGICAL2_MRI/DATA/images/Pacientes/pre  /bcbl/home/public/CVR/PRESURGICAL
+bidscoiner /bcbl/data/MRI/PRESURGICAL2_MRI/DATA/images/Pacientes/pre  /bcbl/home/public/CVR/PRESURGICAL_BIDS #Tres Digitos minuscula
+bidscoiner -b bidsmap2.yaml /bcbl/data/MRI/PRESURGICAL2_MRI/DATA/images/Pacientes/pre  /bcbl/home/public/CVR/PRESURGICAL_BIDS  #Dos Digitos minuscula
+
+bidsmapper -n "*_PRESURGICAL" -m "CRANEO_FUNCIONAL" /bcbl/data/MRI/PRESURGICAL2_MRI/DATA/images/Pacientes/pre  /bcbl/home/public/CVR/PRESURGICAL_2
+bidscoiner /bcbl/data/MRI/PRESURGICAL2_MRI/DATA/images/Pacientes/pre  /bcbl/home/public/CVR/PRESURGICAL #Dos Digitos
+bidscoiner -b bidsmap2.yaml /bcbl/data/MRI/PRESURGICAL2_MRI/DATA/images/Pacientes/pre  /bcbl/home/public/CVR/PRESURGICAL #3digits
+
+#Cuando se vuelva a hacer bidscoin es solo volver a llamar bidscoin
+
+
+#Ejemplo
+bidsmapper -n "*_BIPLAS" -m "CRANEO_FUNCIONAL" /bcbl/data/MRI/BIPLAS_MRI/DATA/images /bcbl/home/public/CVR/Diapositiva
+bidscoiner /bcbl/data/MRI/BIPLAS_MRI/DATA/images /bcbl/home/public/CVR/Diapositiva
