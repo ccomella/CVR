@@ -46,26 +46,46 @@ date=(20230928)
 num_1=(001)
 num_2=(028)
 tumor=(s6)
-# # Create mask with non tumoural area 
+# # Create masks
+
+
 for i in 0 #$(seq 0 1);  #$(seq 0 17);
 do
-    wdr=${PRJDIR}/sub-${sub[i]}/ses-${ses_anat[i]}/anat_preproc
+    # Work directory Anat Preproc
+     wdr=${PRJDIR}/sub-${sub[i]}/ses-${ses_anat[i]}/anat_preproc
+     cd ${wdr}
 
-    cd ${wdr}
+    # # First mask: GM Mask (c1)
+    echo "**********************************************************************************************" 
+    echo "Rename GM Mask (c1) previously in SPM"
+    echo "**********************************************************************************************"
+    3dcopy c1tb_${sub[i]}_${presurgical[i]}_${name[i]}_${date[i]}_${num_1[i]}_${num_2[i]}_t1_mprage_sag_p2_1iso_MGH.nii tb_${sub[i]}_GM_mask.nii -overwrite
 
-    #  #First Step: Brain mask, adding three files 
+    # # Second mask: WM Mask (c2)
+    echo "**********************************************************************************************"
+    echo "Rename WM Mask (c2) previously in SPM"
+    echo "**********************************************************************************************"
+    3dcopy c2tb_${sub[i]}_${presurgical[i]}_${name[i]}_${date[i]}_${num_1[i]}_${num_2[i]}_t1_mprage_sag_p2_1iso_MGH.nii tb_${sub[i]}_WM_mask.nii -overwrite
+
+    # DUDA: se hace antes o despues
+    # # Third mask: GM - Tumor Mask 
+    3dcalc -a tb_${sub[i]}_GM_mask.nii -b rbin_${tumor[i]}_Tumor.nii -expr 'a*(a-b)' -prefix tb_${sub[i]}_GM_nontumor_mask.nii -overwrite
+    
+    
+    
+    #  # Fourth Mask: Complete Brain mask, adding three files 
     echo "**********************************************************************************************"
     echo "Compute anatomical brain mask as the sum of the tissue segmentations previously computed in SPM"
     echo "**********************************************************************************************"
     3dcalc -a c1tb_${sub[i]}_${presurgical[i]}_${name[i]}_${date[i]}_${num_1[i]}_${num_2[i]}_t1_mprage_sag_p2_1iso_MGH.nii -b c2tb_${sub[i]}_${presurgical[i]}_${name[i]}_${date[i]}_${num_1[i]}_${num_2[i]}_t1_mprage_sag_p2_1iso_MGH.nii \
         -c c3tb_${sub[i]}_${presurgical[i]}_${name[i]}_${date[i]}_${num_1[i]}_${num_2[i]}_t1_mprage_sag_p2_1iso_MGH.nii -expr 'step(a+b+c)' -prefix tb_${sub[i]}_brain_mask.nii -overwrite
 
-
     echo "***********************************************"
     echo "Refine anatomical brain mask with 3dmask_tool"
     echo "***********************************************"
     3dmask_tool -input tb_${sub[i]}_brain_mask.nii -dilate_inputs -1 +1 -fill_holes -prefix tb_${sub[i]}_brain_mask.nii -overwrite
 
+    # # Fifth Mask: Brain mask without the tumor
     echo "************************************************"
     echo "Compute anatomical brain mask without the tumor"
     echo "************************************************"
@@ -78,18 +98,19 @@ do
     # 3dcalc -a tb_${sub[i]}_brain_mask.nii -b rbin_${tumor[i]}_Tumor.nii -expr 'b' -prefix rbin_${tumor[i]}_tumor_mask.nii -overwrite
 
 
-    #Perform Skull Stripping
+    # # Perform Skull Stripping of T1-w anatomical image
     echo "************************************************"
     echo "Perform skull stripping of T1-w anatomical image"
     echo "************************************************"
-
     3dSkullStrip -input tb_${sub[i]}_${presurgical[i]}_${name[i]}_${date[i]}_${num_1[i]}_${num_2[i]}_t1_mprage_sag_p2_1iso_MGH.nii -prefix tb_${sub[i]}_T1w_ns.nii.gz -push_to_edge -overwrite
 
+    # # Apply  Sbref (reference vol) as mask to Optcom volume
     echo "************************************************"
     echo "Apply EPI mask to EPI SBref volume and anatomical"
     echo "************************************************"
     3dcalc -a sub-${sub[i]}_ses-${ses_func[i]}_task-BH_run-1_echo-1_sbref.nii.gz -m sub-${sub[i]}_ses-${ses_func[i]}_task-BH_optcom_mask.nii.gz -expr "a*m" -prefix sbref_${sub[i]}_ns.nii.gz -overwrite
 
+    # # Copy all nifti without nifti extension because align_epi_anat does not work with nifti extension
     echo "***********************************"
     echo "3D copy without nifti of ${sub[i]}"
     echo "************************************"
